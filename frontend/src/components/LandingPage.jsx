@@ -21,7 +21,15 @@ const placementRows = Array.from({ length: 100 }, (_, index) => {
   const placementPossibility = Math.min(98,Math.max(24, Math.round(Number(cgpa) * 8 + (iq - 90) * 0.7)));
   return { serialNo, cgpa, iq, placementPossibility: `${placementPossibility}%`,};});
 
-export default function CBXLanding() {const openLogin = () => {window.location.href = "/logsign";};
+export default function CBXLanding({ onNavigate }) {
+  const openLogin = () => {
+    if (onNavigate) {
+      onNavigate("/logsign");
+      return;
+    }
+
+    window.location.href = "/logsign";
+  };
 
   return (
     <div className="h-screen bg-[#0a0f18] text-white font-sans pt-14 overflow-y-auto scrollbar-thin scrollbar-thumb-cyan-400">
@@ -155,7 +163,7 @@ export default function CBXLanding() {const openLogin = () => {window.location.h
       <section className="border-t border-[#131c2b] py-8 text-center px-8 backdrop-blur-sm z-50">
         <h2 className="text-3xl font-bold mb-4">Ready to try models?</h2>
         <p className="text-gray-400 mb-8 max-w-md mx-auto text-sm">WorkShop-X brings together all the ML models and perform proper data management.</p>
-        <button className="bg-[#4a9eff] hover:bg-[#3a8eef] text-white px-8 py-3 rounded-lg font-medium transition-colors">Launch WorkShop-X</button>
+        <button onClick={openLogin} className="bg-[#4a9eff] hover:bg-[#3a8eef] text-white px-8 py-3 rounded-lg font-medium transition-colors">Launch WorkShop-X</button>
       </section>
 
       <footer className="border-t border-[#131c2b] px-8 py-6 flex items-center justify-between text-xs text-gray-600 backdrop-blur-sm z-50">
