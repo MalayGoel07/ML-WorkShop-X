@@ -12,5 +12,5 @@ cluster = os.getenv("MONGO_CLUSTER")
 MONGO_URI = f"mongodb+srv://{quote_plus(username)}:{quote_plus(password)}@{cluster}/"
 
 client = MongoClient(MONGO_URI)
-db = client["qbot_x"]
-users_collection = db["users"]
+db = client["ml_workshop"]
+users_collection = db["user"]
