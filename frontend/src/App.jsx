@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import ChatPage from "./components/ChatPage";
+import HomePage from "./components/HomePage";
 import CBXLanding from "./components/LandingPage";
 import LogSignPage from "./components/LogSignPage";
 
@@ -21,8 +21,8 @@ export default function App() {
     return <LogSignPage onNavigate={navigate} />;
   }
 
-  if (path === "/chat") {
-    return <ChatPage onNavigate={navigate} />;
+  if (path === "/home" || path === "/chat") {
+    return <HomePage onNavigate={navigate} />;
   }
 
   return <CBXLanding onNavigate={navigate} />;
