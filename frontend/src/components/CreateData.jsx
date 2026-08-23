@@ -88,10 +88,10 @@ export default function CreateData({ onNavigate }) {
                             </label>
                             {type === "regression" && <>
                                 <label className="text-sm text-gray-400">Slope
-                                    <input type="number" step="0.01" value={slope} onChange={(event) => setSlope(Number(event.target.value))} className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]" />
+                                    <input type="number" step="0.1" value={slope} onChange={(event) => setSlope(Number(event.target.value))} className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]" />
                                 </label>
                                 <label className="text-sm text-gray-400">Constant
-                                    <input type="number" step="0.01" value={constant} onChange={(event) => setConstant(Number(event.target.value))} className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]" />
+                                    <input type="number" step="0.1" value={constant} onChange={(event) => setConstant(Number(event.target.value))} className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]" />
                                 </label>
                             </>}
                             {type === "classification" && <>

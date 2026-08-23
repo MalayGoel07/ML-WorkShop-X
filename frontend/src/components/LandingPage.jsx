@@ -4,7 +4,6 @@ const models = [
   { role: "Gradient Descent", model: "Optimization" },
   { role: "Decision Tree", model: "Classification" },
   { role: "Random Forest", model: "Ensemble" },
-  { role: "K-Means Clustering", model: "Clustering" },
 ];
 
 const modelAccuracies = [
@@ -125,7 +124,7 @@ export default function CBXLanding({ onNavigate }) {
         <div className="grid md:grid-cols-3 gap-5">
           {[
             { title: "Enhanced Routing", desc: "Routes the input data, analyzes your data and peform EDA, distributes data to all models.", icon: "⇄" },
-            { title: "ML Models", desc: "Dedicated models for Regression, Classification, Clustering, and Optimization run in parallel for the task at hand.", icon: "◈" },
+            { title: "ML Models", desc: "Dedicated models for Regression and Classification run in parallel for the task at hand.", icon: "◈" },
             { title: "Ultima Output", desc: "ML model synthesizes output responses into one table, with final accuracies.", icon: "⊕" },
           ].map((f) => (
             <div key={f.title} className="bg-[#0e140e] border border-[#243724] rounded-xl p-6 hover:border-[#7aa88a]/40 transition-colors">

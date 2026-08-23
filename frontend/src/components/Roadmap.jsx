@@ -28,10 +28,6 @@ const roadmapSections = [
         topics: ["Linear Regression", "Polynomial Regression", "Ridge Regression", "Lasso Regression"],
     },
     {
-        title: "Clustering",
-        topics: ["K-Means", "Hierarchical Clustering", "DBSCAN"],
-    },
-    {
         title: "Model Evaluation",
         topics: ["Accuracy", "Precision", "Recall", "F1 Score"],
     },

@@ -5,7 +5,7 @@ const api = {
   async get(path) {
     const response = await fetch(`${API_BASE_URL}${path}`);
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) {throw { response: { data } };}
+    if (!response.ok) {throw new Error(data.detail || `Request failed (${response.status})`);}
     return { data };
   },
   async post(path, body) {
@@ -16,7 +16,7 @@ const api = {
       body: isFormData ? body : JSON.stringify(body),
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) {throw { response: { data } };}
+    if (!response.ok) {throw new Error(data.detail || `Request failed (${response.status})`);}
     return { data };
   },
 };
