@@ -3,21 +3,16 @@ import FloatingWords from "../components/FloatingWords";
 
 const terminalRoutes = {
   ai: "/ai",
-  analyze: "/code-comp",
+  analyze: "/analyze",
   roadmap: "/roadmap",
   compare: "/compare",
-  compiler: "/SandboxCompiler",
-  practice: "/instant-metrics",
   create: "/createdata",
-  data: "/createdata",
   lab: "/lab",
   profile: "/profile",
-  feedback: "/feedback",
-  about: "/about",
 };
 
 const terminalCommands = {
-  help: "Commands: help, clear, ai, analyze, roadmap, compare, compiler, create, lab, data, practice, profile, feedback, about, logout",
+  help: "Commands: help, clear, ai, analyze, roadmap, compare, create, lab, data, profile, logout",
   ai: "Opening assistant lab...",
   analyze: "Data analyzer ready!",
   roadmap: "Roadmap loading...",
@@ -43,76 +38,36 @@ const keyRows = [
 export default function HomePage({ onNavigate }) {
   const [terminal, setTerminal] = useState("> help");
   const [caps, setCaps] = useState(false);
-
   const navigate = (route) => {
-    if (typeof onNavigate === "function") {
-      onNavigate(route);
-    } else {
-      // Fallback so navigation still works even if the parent
-      // forgot to pass onNavigate, or passed something wrong.
-      console.warn(
-        "[HomePage] onNavigate prop missing or not a function — falling back to window.location"
-      );
+    if (typeof onNavigate === "function") {onNavigate(route);}
+    else {
+      console.warn( "[HomePage] onNavigate prop missing or not a function — falling back to window.location");
       window.location.href = route;
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/");
-  };
-
-  // Returns the text typed after the LAST "> " prompt, so backspace/enter
-  // can never reach into previous output lines.
+  const handleLogout = () => {localStorage.removeItem("token");navigate("/");};
   const getCurrentLineLength = (value) => {
     const lastPromptIndex = value.lastIndexOf("> ");
     return lastPromptIndex === -1 ? 0 : value.length - (lastPromptIndex + 2);
   };
 
   const handleCommand = (value) => {
-    if (value === "bksp") {
-      setTerminal((current) =>
-        getCurrentLineLength(current) > 0 ? current.slice(0, -1) : current
-      );
-      return;
-    }
-
+    if (value === "bksp") {setTerminal((current) =>getCurrentLineLength(current) > 0 ? current.slice(0, -1) : current);return;}
     if (value === "enter") {
       const command = terminal.split("\n").at(-1).replace("> ", "").trim().toLowerCase();
-
-      if (command === "clear") {
-        setTerminal("> ");
-        return;
-      }
-
-      if (command === "logout") {
-        handleLogout();
-        return;
-      }
-
+      if (command === "clear") {setTerminal("> ");return;}
+      if (command === "logout") { handleLogout();return;}
       const route = terminalRoutes[command];
       if (route) navigate(route);
-
       const response = terminalCommands[command] || "Command not found";
       setTerminal(`${terminal}\n${response}\n> `);
       return;
     }
-
-    if (value === "tab") {
-      setTerminal((current) => `${current}    `);
-      return;
-    }
-    if (value === "caps") {
-      setCaps((current) => !current);
-      return;
-    }
-    if (value === "space") {
-      setTerminal((current) => `${current} `);
-      return;
-    }
-    if (value.length === 1) {
-      setTerminal((current) => `${current}${caps ? value.toUpperCase() : value}`);
-    }
+    if (value === "tab") {setTerminal((current) => `${current}    `);return;}
+    if (value === "caps") {setCaps((current) => !current);return;}
+    if (value === "space") {setTerminal((current) => `${current} `);return;}
+    if (value.length === 1) {setTerminal((current) => `${current}${caps ? value.toUpperCase() : value}`);}
   };
 
   useEffect(() => {
@@ -175,10 +130,10 @@ export default function HomePage({ onNavigate }) {
             </div>
 
             <div className="flex flex-col gap-4">
-              <div role="button" tabIndex={0} onClick={() => navigate("/lab")} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") navigate("/lab"); }} className="flex-1 cursor-pointer rounded-xl border border-[#243724] bg-[#101a10] p-5 transition hover:border-[#618c61] hover:bg-[#142014] focus:outline-none focus:ring-2 focus:ring-[#7aa88a]">
-                <h2 className="mb-2 text-lg font-bold text-[#adc9ae]">Lab</h2>
+              <div role="button" tabIndex={0} onClick={() => navigate("/createdata")} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") navigate("/createdata"); }} className="flex-1 cursor-pointer rounded-xl border border-[#243724] bg-[#101a10] p-5 transition hover:border-[#618c61] hover:bg-[#142014] focus:outline-none focus:ring-2 focus:ring-[#7aa88a]">
+                <h2 className="mb-2 text-lg font-bold text-[#adc9ae]">Create Data</h2>
                 <p className="text-sm leading-6 text-gray-400">
-                  Experiment with machine learning workflows and test your
+                  Experiment with custom learning data and test your
                   ideas in an interactive workspace.
                 </p>
               </div>
@@ -201,9 +156,9 @@ export default function HomePage({ onNavigate }) {
             </div>
 
             <div className="flex min-h-full flex-col items-center justify-between rounded-[30px] w-14 border border-[#243724] hover:border-[#618c61] bg-[#161616] px-2 py-8">
-              <button onClick={() => navigate("/createdata")} className="w-full rounded-[30px] border border-[#243724] bg-[#172617] py-3 text-xs text-[#d4e6d5] hover:border-[#618c61] transition hover:bg-[#1f331f] hover:text-[#adc9ae]">Cre</button>
+              <button onClick={() => navigate("/history")} className="w-full rounded-[30px] border border-[#243724] bg-[#172617] py-3 text-xs text-[#d4e6d5] hover:border-[#618c61] transition hover:bg-[#1f331f] hover:text-[#adc9ae]">His</button>
               <button onClick={() => navigate("/roadmap")} className="w-full rounded-[30px] border border-[#243724] bg-[#172617] py-3 text-xs text-[#d4e6d5] hover:border-[#618c61] transition hover:bg-[#1f331f] hover:text-[#adc9ae]">Map</button>
-              <button onClick={() => navigate("/ai")} className="w-full rounded-[30px] border border-[#243724] bg-[#172617] py-3 text-xs text-[#d4e6d5] hover:border-[#618c61] transition hover:bg-[#1f331f] hover:text-[#adc9ae]">Ai</button>
+              <button onClick={() => navigate("/ai")} className="w-full rounded-[30px] border border-[#243724] bg-[#172617] py-3 text-xs text-[#d4e6d5] hover:border-[#618c61] transition hover:bg-[#1f331f] hover:text-[#adc9ae]">AI</button>
             </div>
 
           </div>

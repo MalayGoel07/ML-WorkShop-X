@@ -1,14 +1,19 @@
 import { useState } from "react";
 
-const createRows = (rowCount, columnCount, dataType, missingRate) => {
+const createRows = (rowCount, columnCount, dataType, missingRate, type, slope, constant, classLabels) => {
     const headers = Array.from({ length: columnCount }, (_, index) => `feature_${index + 1}`);
     return Array.from({ length: rowCount }, (_, rowIndex) =>
-        headers.map((_, columnIndex) => {
-            if (Math.random() < missingRate / 100) return "";
-            if (dataType === "categorical") return ["low", "medium", "high"][(rowIndex + columnIndex) % 3];
-            if (dataType === "integer") return String((rowIndex + 1) * (columnIndex + 2));
-            return ((rowIndex + 1) * 1.37 + columnIndex * 2.11).toFixed(2);
-        })
+        [
+            ...headers.map((_, columnIndex) => {
+                if (Math.random() < missingRate / 100) return "";
+                if (dataType === "categorical") return ["low", "medium", "high"][(rowIndex + columnIndex) % 3];
+                if (dataType === "integer") return String((rowIndex + 1) * (columnIndex + 2));
+                return ((rowIndex + 1) * 1.37 + columnIndex * 2.11).toFixed(2);
+            }),
+            type === "regression"
+                ? (slope * (rowIndex + 1) + constant).toFixed(2)
+                : classLabels[Math.floor((rowIndex / rowCount) * classLabels.length) % classLabels.length],
+        ]
     );
 };
 
@@ -17,11 +22,21 @@ export default function CreateData({ onNavigate }) {
     const [columnCount, setColumnCount] = useState(4);
     const [dataType, setDataType] = useState("decimal");
     const [missingRate, setMissingRate] = useState(0);
-    const [dataset, setDataset] = useState(() => createRows(12, 4, "decimal", 0));
+    const [type, setType] = useState("regression");
+    const [slope, setSlope] = useState(2);
+    const [constant, setConstant] = useState(0);
+    const [classCount, setClassCount] = useState(2);
+    const [classLabels, setClassLabels] = useState("class_0, class_1");
+    const [dataset, setDataset] = useState(() => createRows(12, 4, "decimal", 0, "regression", 2, 0, ["class_0", "class_1"]));
 
-    const headers = Array.from({ length: columnCount }, (_, index) => `feature_${index + 1}`);
+    const headers = [...Array.from({ length: columnCount }, (_, index) => `feature_${index + 1}`), "target"];
     const missingValues = dataset.flat().filter((value) => value === "").length;
-    const generateDataset = () => setDataset(createRows(rowCount, columnCount, dataType, missingRate));
+    const generateDataset = () => {
+        const labels = classLabels.split(",").map((label) => label.trim()).filter(Boolean).slice(0, classCount);
+        while (labels.length < classCount) labels.push(`class_${labels.length}`);
+        setClassLabels(labels.join(", "));
+        setDataset(createRows(rowCount, columnCount, dataType, missingRate, type, slope, constant, labels));
+    };
     const downloadDataset = () => {
         const csv = [headers, ...dataset].map((row) => row.join(",")).join("\n");
         const link = document.createElement("a");
@@ -68,6 +83,25 @@ export default function CreateData({ onNavigate }) {
                             <label className="text-sm text-gray-400">Missing values: {missingRate}%
                                 <input type="range" min="0" max="30" value={missingRate} onChange={(event) => setMissingRate(Number(event.target.value))} className="mt-4 w-full accent-[#7aa88a]" />
                             </label>
+                            <label className="text-sm text-gray-400">Task type
+                                <select value={type} onChange={(event) => setType(event.target.value)} className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]"><option value="regression">Regression</option><option value="classification">Classification</option></select>
+                            </label>
+                            {type === "regression" && <>
+                                <label className="text-sm text-gray-400">Slope
+                                    <input type="number" step="0.01" value={slope} onChange={(event) => setSlope(Number(event.target.value))} className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]" />
+                                </label>
+                                <label className="text-sm text-gray-400">Constant
+                                    <input type="number" step="0.01" value={constant} onChange={(event) => setConstant(Number(event.target.value))} className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]" />
+                                </label>
+                            </>}
+                            {type === "classification" && <>
+                                <label className="text-sm text-gray-400">Number of classes
+                                    <input type="number" min="2" max="10" value={classCount} onChange={(event) => setClassCount(Math.max(2, Math.min(10, Number(event.target.value))))} className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]" />
+                                </label>
+                                <label className="text-sm text-gray-400 sm:col-span-2">Class labels (comma separated)
+                                    <input type="text" value={classLabels} onChange={(event) => setClassLabels(event.target.value)} placeholder="class_0, class_1" className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]" />
+                                </label>
+                            </>}
                         </div>
                         <button type="button" onClick={generateDataset} className="mt-6 w-full rounded-lg bg-[#618c61] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#7aa88a]">Generate dataset</button>
                     </div>

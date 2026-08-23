@@ -3,6 +3,7 @@ import HomePage from "./components/HomePage";
 import CBXLanding from "./components/LandingPage";
 import LogSignPage from "./components/LogSignPage";
 import DataAnalyzer from "./components/DataAnalyzer";
+import CompareModel from "./components/CompareModel";
 import Roadmap from "./components/Roadmap";
 import CreateData from "./components/CreateData";
 
@@ -20,6 +21,7 @@ export default function App() {
   if (path === "/logsign") {return <LogSignPage onNavigate={navigate} />;}
   if (path === "/home") {return <HomePage onNavigate={navigate} />;}
   if (path === "/analyze") {return <DataAnalyzer onNavigate={navigate} />;}
+  if (path === "/compare") {return <CompareModel onNavigate={navigate} />;}
   if (path === "/roadmap") {return <Roadmap onNavigate={navigate} />;}
   if (path === "/createdata") {return <CreateData onNavigate={navigate} />;}
 

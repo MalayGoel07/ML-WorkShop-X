@@ -27,3 +27,6 @@ starlette==1.2.1
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 uvicorn==0.48.0
+scikit-learn==1.8.0
+pandas==3.0.1
+openpyxl==3.1.5
