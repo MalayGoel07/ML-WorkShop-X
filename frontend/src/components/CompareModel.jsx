@@ -5,9 +5,12 @@ const METRIC_SETS = {
     classification: ["Accuracy", "Precision", "Recall", "F1 score"],
     regression: ["RMSE", "MAE", "R² score"],
 };
+const PRIMARY_METRIC = {
+    classification: { key: "Accuracy", better: "higher" },
+    regression: { key: "R² score", better: "higher" },
+};
 
 export default function CompareModel({ onNavigate }) {
-
     const fileInputRef = useRef(null);
     const [fileName, setFileName] = useState("");
     const [file, setFile] = useState(null);
@@ -19,14 +22,22 @@ export default function CompareModel({ onNavigate }) {
 
     const [isRunning, setIsRunning] = useState(false);
     const [results, setResults] = useState({});
-    
+
     const modelTask = Object.fromEntries(modelOptions.map((model) => [model.name, model.task]));
     const visibleModels = modelOptions.filter(({ task }) => task === taskType || task === "both");
 
     useEffect(() => {api.get("/models").then(({ data }) => setModelOptions(data.models || [])).catch(() => setResults({ error: "Could not load models" }));}, []);
 
-    const toggleModel = (modelName) => {setSelectedModels((current) =>current.includes(modelName) ? current.filter((model) => model !== modelName) : [...current, modelName]);};
-    const changeTaskType = (t) => {setTaskType(t);setSelectedModels((current) =>current.filter((name) => {const selectedTask = modelTask[name];return selectedTask === t || selectedTask === "both";}));};
+    const toggleModel = (modelName) => {setSelectedModels((current) => current.includes(modelName) ? current.filter((model) => model !== modelName) : [...current, modelName]);};
+
+    const changeTaskType = (t) => {
+        setTaskType(t);
+        setSelectedModels((current) => current.filter((name) => {
+            const selectedTask = modelTask[name];
+            return selectedTask === t || selectedTask === "both";
+        }));
+    };
+
     const handleFileChange = (event) => {
         const selected = event.target.files[0];
         setFile(selected || null);
@@ -34,14 +45,17 @@ export default function CompareModel({ onNavigate }) {
         setResults({});
     };
 
-    const activeTaskSets = new Set( selectedModels.map((name) => {const t = modelTask[name];return t === "both" ? taskType : t;}));
+    const activeTaskSets = new Set(selectedModels.map((name) => {
+        const t = modelTask[name];
+        return t === "both" ? taskType : t;
+    }));
     const activeMetrics = [...activeTaskSets].flatMap((t) => METRIC_SETS[t]);
     const displayMetrics = [...new Set(activeMetrics)];
     const needsTarget = selectedModels.length > 0;
 
     const runComparison = async () => {
-        if (!file) {return;}
-        if (needsTarget && !targetColumn.trim()) {alert("Enter a target column for the selected models.");return;}
+        if (!file) return;
+        if (needsTarget && !targetColumn.trim()) {return;}
         if (selectedModels.length === 0) return;
 
         setIsRunning(true);
@@ -56,17 +70,19 @@ export default function CompareModel({ onNavigate }) {
 
             const { data } = await api.post("/train", formData);
             const nextResults = {};
-            
+
             for (const name of selectedModels) {
                 const entry = data.results?.[name];
                 if (!entry) {nextResults[name] = { status: "failed", error: "No result returned" };} 
                 else if (entry.error) {nextResults[name] = { status: "failed", error: entry.error };} 
-                else {nextResults[name] = { status: "done", metrics: entry.metrics };}
+                else {nextResults[name] = { status: "done", metrics: entry.metrics, testSamples: entry.test_samples };}
             }
             setResults(nextResults);
-        } 
-        catch (err) {setResults(Object.fromEntries(selectedModels.map((m) => [m, { status: "failed", error: err.message }])));} 
-        finally {setIsRunning(false);}
+        } catch (err) {
+            setResults(Object.fromEntries(selectedModels.map((m) => [m, { status: "failed", error: err.message }])));
+        } finally {
+            setIsRunning(false);
+        }
     };
 
     const statusBadge = (name) => {
@@ -76,6 +92,23 @@ export default function CompareModel({ onNavigate }) {
         if (entry.status === "done") return { label: "Done", className: "border-[#7aa88a] text-[#d4e6d5] bg-[#172617]" };
         return { label: "Failed", className: "border-red-800 text-red-400" };
     };
+
+    const getLeaderboardStats = () => {
+        const primary = PRIMARY_METRIC[taskType];
+        const doneEntries = selectedModels .map((name) => ({ name, entry: results[name] })).filter(({ entry }) => entry?.status === "done" && entry.metrics?.[primary.key] !== undefined);
+        const failedCount = selectedModels.filter((name) => results[name]?.status === "failed").length;
+        if (doneEntries.length === 0) {return { bestScore: "--", bestModel: "--", failedRuns: failedCount || "--", testSamples: "--" };}
+        const ranked = doneEntries.reduce((best, current) => {
+            const currentValue = current.entry.metrics[primary.key];
+            const bestValue = best.entry.metrics[primary.key];
+            const currentIsBetter = primary.better === "higher" ? currentValue > bestValue : currentValue < bestValue;
+            return currentIsBetter ? current : best;
+        });
+        return {bestScore: ranked.entry.metrics[primary.key],bestModel: ranked.name,failedRuns: failedCount,testSamples: ranked.entry.testSamples ?? "--",};
+    };
+
+    const { bestScore, bestModel, failedRuns, testSamples } = getLeaderboardStats();
+    const cardValues = { "Best score": bestScore, "Best model": bestModel, "Failed runs": failedRuns, "Test samples": testSamples };
 
     return (
         <div className="h-screen overflow-x-hidden overflow-y-auto bg-[#292929] px-4 py-4 font-mono text-white scrollbar-thin scrollbar-thumb-[#7aa88a] md:px-8">
@@ -99,7 +132,9 @@ export default function CompareModel({ onNavigate }) {
                         </div>
 
                         <div className="mb-4 flex gap-2">
-                            {["classification", "regression"].map((t) => (<button key={t} type="button" onClick={() => changeTaskType(t)} className={`flex-1 rounded-lg border px-3 py-2 text-xs capitalize transition ${taskType === t ? "border-[#618c61] bg-[#172617] text-[#d4e6d5]" : "border-[#243724] bg-[#101a10] text-gray-400 hover:border-[#618c61]"}`}>{t}</button>))}
+                            {["classification", "regression"].map((t) => (
+                                <button key={t} type="button" onClick={() => changeTaskType(t)} className={`flex-1 rounded-lg border px-3 py-2 text-xs capitalize transition ${taskType === t ? "border-[#618c61] bg-[#172617] text-[#d4e6d5]" : "border-[#243724] bg-[#101a10] text-gray-400 hover:border-[#618c61]"}`}>{t}</button>
+                            ))}
                         </div>
 
                         <div className="max-h-80 space-y-2 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#7aa88a] scrollbar-track-[#101a10] lg:max-h-96">
@@ -120,7 +155,7 @@ export default function CompareModel({ onNavigate }) {
 
                         <div className="mt-5 border-t border-[#243724] pt-4">
                             <p className="mb-2 text-xs uppercase tracking-[0.2em] text-[#adc9ae]">Target column</p>
-                            <input type="text" value={targetColumn} onChange={(e) => setTargetColumn(e.target.value)} placeholder="e.g. price, label, class" disabled={!needsTarget} className="w-full rounded-lg border border-[#243724] bg-[#101a10] px-3 py-2 text-sm text-[#d4e6d5] placeholder:text-gray-600 focus:border-[#618c61] focus:outline-none disabled:opacity-50"/>
+                            <input type="text" value={targetColumn} onChange={(e) => setTargetColumn(e.target.value)} placeholder="e.g. price, label, class" disabled={!needsTarget} className="w-full rounded-lg border border-[#243724] bg-[#101a10] px-3 py-2 text-sm text-[#d4e6d5] placeholder:text-gray-600 focus:border-[#618c61] focus:outline-none disabled:opacity-50" />
                         </div>
 
                         <div className="mt-5 border-t border-[#243724] pt-4">
@@ -139,14 +174,16 @@ export default function CompareModel({ onNavigate }) {
                             </div>
                             <span className="text-xs text-gray-500">{selectedModels.length} models selected</span>
                         </div>
+
                         <div className="grid grid-cols-2 gap-3">
                             {["Best score", "Best model", "Failed runs", "Test samples"].map((label) => (
                                 <div key={label} className="rounded-lg border border-[#243724] bg-[#0e140e] p-4">
                                     <p className="text-xs text-gray-500">{label}</p>
-                                    <p className="mt-2 text-2xl font-bold text-[#adc9ae]">--</p>
+                                    <p className="mt-2 text-2xl font-bold text-[#adc9ae] truncate">{cardValues[label]}</p>
                                 </div>
                             ))}
                         </div>
+
                         <button type="button" onClick={runComparison} disabled={isRunning || selectedModels.length === 0} className="mt-4 w-full rounded-lg bg-[#618c61] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#7aa88a] disabled:cursor-not-allowed disabled:opacity-50">{isRunning ? "Running..." : "Run comparison"}</button>
                     </section>
                 </div>
