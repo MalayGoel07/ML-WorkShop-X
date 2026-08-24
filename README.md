@@ -53,7 +53,6 @@ How it fits together:
 - K-Nearest Neighbors
 - AdaBoost
 - Gradient Boosting
-- Gradient Descent (SGD)
 
 Each model entry indicates if it supports classification, regression, or both, and whether input scaling is required.
 
