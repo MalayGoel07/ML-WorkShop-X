@@ -1,4 +1,4 @@
-from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier, SGDRegressor
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from sklearn.ensemble import (
     RandomForestClassifier,
@@ -69,12 +69,6 @@ MODEL_REGISTRY = {
         "task": "both",
         "needs_scaling": False,
         "build": lambda task_type, **params: (GradientBoostingClassifier(**params) if task_type == "classification" else GradientBoostingRegressor(**params)),
-    },
-
-    "Gradient Descent": {
-        "task": "both",
-        "needs_scaling": True,
-        "build": lambda task_type, **params: (SGDClassifier(max_iter=1000, **params) if task_type == "classification" else SGDRegressor(max_iter=1000, **params)),
     },
 
 }

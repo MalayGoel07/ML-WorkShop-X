@@ -8,6 +8,7 @@ const api = {
     if (!response.ok) {throw new Error(data.detail || `Request failed (${response.status})`);}
     return { data };
   },
+  
   async post(path, body) {
     const isFormData = body instanceof FormData;
     const response = await fetch(`${API_BASE_URL}${path}`, {

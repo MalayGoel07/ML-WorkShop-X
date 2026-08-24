@@ -17,6 +17,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from model_registry import MODEL_REGISTRY, compute_metrics, effective_task, get_model
+from analyzer import analyze_dataset, create_relationship_charts
 
 load_dotenv()
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
@@ -40,7 +41,6 @@ async def list_models():
         "K-Nearest Neighbors": "Classifies by nearby observations",
         "AdaBoost": "Boosts weak learners by reweighting errors",
         "Gradient Boosting": "Sequentially improves weak learners",
-        "Gradient Descent": "Optimizes a model through iterations",
     }
     return {
         "models": [
@@ -67,17 +67,25 @@ def load_dataset(file: UploadFile, contents: bytes) -> pd.DataFrame:
         raise HTTPException(status_code=400, detail=f"Could not read dataset: {exc}") from exc
 
 
+@app.post("/analyze")
+async def analyze_file(file: UploadFile = File(...)):
+    contents = await file.read()
+    dataset = load_dataset(file, contents)
+    try:
+        return {
+            "analysis": analyze_dataset(dataset),
+            "charts": create_relationship_charts(dataset),
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @app.post("/train")
 async def train_models( file: UploadFile = File(...), target_column: str = Form(""), task_type: str = Form(...), models: str = Form(...),):
-
-    if task_type not in {"classification", "regression"}:
-        raise HTTPException(status_code=400, detail="Unsupported task_type")
     try:
         model_names = json.loads(models)
     except json.JSONDecodeError as exc:
         raise HTTPException(status_code=400, detail="models must be a JSON array") from exc
-    if not isinstance(model_names, list) or not model_names:
-        raise HTTPException(status_code=400, detail="Select at least one model")
 
     contents = await file.read()
     dataset = load_dataset(file, contents)
@@ -106,10 +114,8 @@ async def train_models( file: UploadFile = File(...), target_column: str = Form(
         try:
             if name not in MODEL_REGISTRY:
                 raise ValueError(f"Unknown model: {name}")
-            model_task = effective_task(name, task_type)
-            if model_task != task_type:
-                raise ValueError(f"{name} does not support {task_type}")
             
+            model_task = effective_task(name, task_type)
             model = get_model(name, task_type)
             model_X = StandardScaler().fit_transform(X) if MODEL_REGISTRY[name]["needs_scaling"] else X
             
@@ -117,6 +123,7 @@ async def train_models( file: UploadFile = File(...), target_column: str = Form(
             model.fit(X_train, y_train)
             metrics = compute_metrics(task_type, y_test, model.predict(X_test))
             results[name] = {"metrics": metrics}
+            
         except Exception as exc:
             results[name] = {"error": str(exc)}
     return {"results": results}

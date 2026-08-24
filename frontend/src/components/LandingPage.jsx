@@ -1,7 +1,6 @@
 const models = [
   { role: "Linear Regression", model: "Regression" },
   { role: "Logistic Regression", model: "Classification" },
-  { role: "Gradient Descent", model: "Optimization" },
   { role: "Decision Tree", model: "Classification" },
   { role: "Random Forest", model: "Ensemble" },
 ];

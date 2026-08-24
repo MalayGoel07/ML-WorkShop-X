@@ -6,7 +6,6 @@ const words = [
   "Random Forest",
   "Decision Tree",
   "KNN",
-  "Gradient Descent",
   "EDA",
   "Feature Scaling",
   "Normalization",

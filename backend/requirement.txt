@@ -30,3 +30,5 @@ uvicorn==0.48.0
 scikit-learn==1.8.0
 pandas==3.0.1
 openpyxl==3.1.5
+matplotlib==3.10.8
+seaborn==0.13.2

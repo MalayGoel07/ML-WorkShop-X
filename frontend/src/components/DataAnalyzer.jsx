@@ -1,9 +1,37 @@
 import { useRef, useState } from "react";
+import api from "../api/api";
 
 export default function DataAnalyzer({ onNavigate }) {
     const fileInputRef = useRef(null);
     const [fileName, setFileName] = useState("");
-    const handleFileChange = (event) => {setFileName(event.target.files[0]?.name || "");};
+    const [file, setFile] = useState(null);
+    const [input, setInput] = useState("");
+    const [analysis, setAnalysis] = useState(null);
+    const [error, setError] = useState("");
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const handleFileChange = (event) => {
+        const selected = event.target.files[0] || null;
+        setFile(selected); setFileName(selected?.name || ""); setAnalysis(null); setError("");
+    };
+
+    const runAnalyzer = async () => {
+        setIsAnalyzing(true);
+        setError("");
+        try {
+            if (!input.trim() && !file) throw new Error("Add data or choose a file before analyzing.");
+            const formData = new FormData();
+            if (file) {
+                formData.append("file", file);
+            } else {
+                const isJson = input.trimStart().startsWith("[") || input.trimStart().startsWith("{");
+                formData.append("file", new Blob([input], { type: isJson ? "application/json" : "text/csv" }), isJson ? "pasted-data.json" : "pasted-data.csv");
+            }
+            const { data } = await api.post("/analyze", formData);
+            setAnalysis({ ...data.analysis, charts: data.charts || [] });
+        } catch (err) {
+            setAnalysis(null); setError(err.message);
+        } finally {setIsAnalyzing(false);}
+    };
 
     return (
         <div className="h-screen overflow-x-hidden bg-[#292929] px-4 py-4 font-mono text-white md:px-8 overflow-y-auto scrollbar-thin scrollbar-thumb-[#7aa88a]">
@@ -30,6 +58,8 @@ export default function DataAnalyzer({ onNavigate }) {
                         </div>
 
                         <textarea
+                            value={input}
+                            onChange={(event) => {setInput(event.target.value);setFile(null);setFileName("");setAnalysis(null);setError("");}}
                             className="h-64 w-full resize-none rounded-lg border border-[#243724] bg-[#070a07] p-4 text-sm leading-6 text-[#d4e6d5] outline-none transition placeholder:text-gray-600 focus:border-[#7aa88a]"
                             placeholder="Paste rows or JSON here..."
                             aria-label="Dataset input"
@@ -44,10 +74,11 @@ export default function DataAnalyzer({ onNavigate }) {
                                 Upload file
                             </button>
                             <span className="truncate text-xs text-gray-500">{fileName || "No file selected"}</span>
-                            <button type="button" className="rounded-lg bg-[#618c61] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#7aa88a]">
-                                Analyze dataset
+                            <button type="button" onClick={runAnalyzer} disabled={isAnalyzing} className="rounded-lg bg-[#618c61] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#7aa88a] disabled:cursor-not-allowed disabled:opacity-50">
+                                {isAnalyzing ? "Analyzing..." : "Analyze dataset"}
                             </button>
                         </div>
+                        {error && <p role="alert" className="mt-3 text-sm text-red-400">{error}</p>}
                     </div>
 
                     <div className="rounded-xl border border-[#243724] bg-[#101a10] p-5">
@@ -57,10 +88,10 @@ export default function DataAnalyzer({ onNavigate }) {
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             {[
-                                ["Rows", "--"],
-                                ["Columns", "--"],
-                                ["Missing", "--"],
-                                ["Data types", "--"],
+                                ["Rows", analysis?.rows ?? "--"],
+                                ["Columns", analysis?.columns ?? "--"],
+                                ["Missing", analysis?.missing ?? "--"],
+                                ["Data types", analysis ? new Set(analysis.types.map(({ type }) => type)).size : "--"],
                             ].map(([label, value]) => (
                                 <div key={label} className="rounded-lg border border-[#243724] bg-[#0e140e] p-4">
                                     <p className="text-xs text-gray-500">{label}</p>
@@ -69,8 +100,9 @@ export default function DataAnalyzer({ onNavigate }) {
                             ))}
                         </div>
                         <div className="mt-3 rounded-lg border border-dashed border-[#243724] p-4 text-sm leading-6 text-gray-500">
-                            Upload a dataset to populate its quality checks and column-level details.
+                            {analysis ? `${analysis.missing} missing values found across ${analysis.columns} columns.` : "Analyze a dataset to populate its quality checks and column-level details."}
                         </div>
+                        {analysis && <div className="mt-3 space-y-2 text-sm">{analysis.types.map(({ name, type }) => <div key={name} className="flex justify-between border-b border-[#243724] pb-2"><span className="truncate text-[#d4e6d5]">{name}</span><span className="text-[#adc9ae]">{type}</span></div>)}</div>}
                     </div>
                 </div>
 
@@ -80,23 +112,20 @@ export default function DataAnalyzer({ onNavigate }) {
                             <p className="text-xs uppercase tracking-[0.2em] text-[#adc9ae]">03 / Explore</p>
                             <h2 className="mt-1 text-lg font-bold">Patterns and visualizations</h2>
                         </div>
-                        <p className="text-xs text-gray-500">Charts will appear after analysis</p>
+                        <p className="text-xs text-gray-500">{analysis?.charts?.length || 0} relationship charts</p>
                     </div>
-                    <div className="grid gap-4 md:grid-cols-3">
-                        {[
-                            ["Correlation map", "Compare relationships between features."],
-                            ["Distribution", "See how values spread across columns."],
-                            ["Missing values", "Locate gaps before modeling."],
-                        ].map(([title, description]) => (
-                            <div key={title} className="flex min-h-40 flex-col justify-between rounded-lg border border-[#243724] bg-[#101a10] p-4 transition hover:border-[#618c61]">
-                                <div className="flex items-start justify-between gap-3">
-                                    <h3 className="font-semibold text-[#d4e6d5]">{title}</h3>
-                                    <span className="h-2 w-2 rounded-full bg-[#618c61]" />
-                                </div>
-                                <p className="text-sm leading-6 text-gray-500">{description}</p>
-                            </div>
-                        ))}
-                    </div>
+                    {analysis?.charts?.length ? (
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {analysis.charts.map(({ title, image }) => (
+                                <figure key={title} className="overflow-hidden rounded-lg border border-[#243724] bg-[#101a10] p-3">
+                                    <img src={`data:image/png;base64,${image}`} alt={title} className="h-auto w-full rounded bg-white" />
+                                    <figcaption className="px-1 pt-3 text-sm text-[#d4e6d5]">{title}</figcaption>
+                                </figure>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="rounded-lg border border-dashed border-[#243724] p-6 text-sm text-gray-500">Analyze data with at least two related columns to generate relationship charts.</p>
+                    )}
                 </section>
             </section>
         </div>
