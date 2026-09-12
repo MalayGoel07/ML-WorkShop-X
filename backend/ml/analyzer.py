@@ -20,6 +20,64 @@ def _infer_type(series: pd.Series) -> str:
         return "number"
     return "text"
 
+def create_distribution_charts(dataset: pd.DataFrame) -> list[dict[str, str]]:
+    charts = []
+    numeric_columns = dataset.select_dtypes(include="number").columns.tolist()
+    for column in numeric_columns:
+        val = dataset[column].dropna()
+        if len(val) < 2 or val.nunique() <= 1:
+            continue
+        skewness = val.skew()
+        figure, axis = plt.subplots(figsize=(8, 5))
+        sns.histplot(val,kde=True,ax=axis)
+        axis.axvline(val.mean(),linestyle="--",label=f"Mean: {val.mean():.2f}")
+        axis.axvline(val.median(),linestyle=":",label=f"Median: {val.median():.2f}")
+        axis.set_title(f"{column} Distribution | Skewness: {skewness:.2f}")
+        axis.set_xlabel(column)
+        axis.set_ylabel("Frequency")
+        axis.legend()
+        charts.append(_chart(f"{column} distribution",figure))
+    return charts
+
+def stats(dataset:pd.DataFrame)->dict[str,Any]:
+    num=dataset.select_dtypes(include="number")
+    statistics={}
+    for col in num.columns:
+        val=num[col]
+        statistics[col]={
+            "count":int(val.count()),
+            "mean":float(f"{val.mean():.2f}"),
+            "median":float(f"{val.median():.2f}"),
+            "std":float(f"{val.std():.2f}"),
+            "min":float(f"{val.min():.2f}"),
+            "max":float(f"{val.max():.2f}"),
+            "q1":float(f"{val.quantile(0.25):.2f}"),
+            "q3":float(f"{val.quantile(0.75):.2f}"),
+            "skewness": float(f"{val.skew():.2f}"),
+            "iqr": float(f"{val.quantile(0.75)-val.quantile(0.25):.2f}"),
+        }
+    return statistics
+
+def find_outliers(dataset: pd.DataFrame) -> dict[str, Any]:
+    num = dataset.select_dtypes(include="number")
+    outliers = {}
+    for col in num.columns:
+        val = num[col].dropna()
+        q1 = val.quantile(0.25)
+        q3 = val.quantile(0.75)
+        iqr = q3 - q1
+        lower = q1 - 1.5 * iqr
+        upper = q3 + 1.5 * iqr
+
+        mask = (val < lower) | (val > upper)
+        outliers[col] = {
+            "count": int(mask.sum()),
+            "percentage": float(f"{mask.mean() * 100:.2f}"),
+            "lower_bound": float(f"{lower:.2f}"),
+            "upper_bound": float(f"{upper:.2f}"),
+        }
+
+    return outliers
 
 def analyze_dataset(dataset: pd.DataFrame) -> dict[str, Any]:
     if dataset.empty:
@@ -27,11 +85,16 @@ def analyze_dataset(dataset: pd.DataFrame) -> dict[str, Any]:
 
     missing_by_column = dataset.isna().sum()
     types = [{"name": str(column), "type": _infer_type(dataset[column])} for column in dataset.columns]
+    dupe_rows=dataset.duplicated().sum()
+    stat_s=stats(dataset)
     return {
         "rows": int(dataset.shape[0]),
         "columns": int(dataset.shape[1]),
         "missing": int(missing_by_column.sum()),
         "types": types,
+        "dup_rows":int(dupe_rows),
+        "stats":stat_s,
+        "outliers": find_outliers(dataset)
     }
 
 
@@ -45,8 +108,8 @@ def _chart(title: str, figure: Any) -> dict[str, str]:
 
 
 def create_relationship_charts(dataset: pd.DataFrame) -> list[dict[str, str]]:
-    """Create useful relationship charts supported by the dataset's column types."""
     charts = []
+    charts.extend(create_distribution_charts(dataset))
     numeric_columns = dataset.select_dtypes(include="number").columns.tolist()
     categorical_columns = dataset.select_dtypes(exclude="number").columns.tolist()
 

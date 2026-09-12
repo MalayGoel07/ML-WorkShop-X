@@ -47,7 +47,7 @@ export default function Roadmap({ onNavigate }) {
                         <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Machine learning</h1>
                         <p className="mt-2 text-sm leading-6 text-gray-400">Build the foundations in the order that makes every next step easier.</p>
                     </div>
-                    <button type="button" onClick={() => onNavigate("/home")} className="rounded-lg border border-[#243724] bg-[#101a10] px-4 py-2 text-sm text-gray-200 transition hover:border-[#7aa88a] hover:text-[#adc9ae]">Back</button>
+                    <button type="button" onClick={() => onNavigate("/home")} className="no-underline rounded-lg border border-red-600 bg-red-600/10 px-4 py-2 text-sm text-red-300 transition hover:bg-red-600/30">Back</button>
                 </header>
 
                 <div className="relative">

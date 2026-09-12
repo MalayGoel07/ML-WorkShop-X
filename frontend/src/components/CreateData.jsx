@@ -56,7 +56,7 @@ export default function CreateData({ onNavigate }) {
                             <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Data Creator</h1>
                             <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-400">Create your own test dataset, tweak its shape, and surface patterns worth exploring.</p>
                         </div>
-                        <button onClick={() => onNavigate("/home")} className="rounded-lg border border-[#243724] bg-[#101a10] px-4 py-2 text-sm text-gray-200 transition hover:border-[#7aa88a]/70 hover:text-[#adc9ae]">Back</button>
+                        <button onClick={() => onNavigate("/home")} className="no-underline rounded-lg border border-red-600 bg-red-600/10 px-4 py-2 text-sm text-red-300 transition hover:bg-red-600/30">Back</button>
                     </div>
                 </header>
 
@@ -83,27 +83,33 @@ export default function CreateData({ onNavigate }) {
                             <label className="text-sm text-gray-400">Missing values: {missingRate}%
                                 <input type="range" min="0" max="30" value={missingRate} onChange={(event) => setMissingRate(Number(event.target.value))} className="mt-4 w-full accent-[#7aa88a]" />
                             </label>
-                            <label className="text-sm text-gray-400">Task type
-                                <select value={type} onChange={(event) => setType(event.target.value)} className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]"><option value="regression">Regression</option><option value="classification">Classification</option></select>
-                            </label>
-                            {type === "regression" && <>
-                                <label className="text-sm text-gray-400">Slope
-                                    <input type="number" step="0.1" value={slope} onChange={(event) => setSlope(Number(event.target.value))} className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]" />
+                            <div className="w-2xl">
+                                <label className="text-sm text-gray-400">Task type
+                                    <select value={type} onChange={(event) => setType(event.target.value)} className="mt-2 w-full rounded-lg bg-blue-400/10 px-3 py-2 text-grey-200 outline-none focus:border-blue-300"><option value="regression">Regression</option><option value="classification">Classification</option></select>
                                 </label>
-                                <label className="text-sm text-gray-400">Constant
-                                    <input type="number" step="0.1" value={constant} onChange={(event) => setConstant(Number(event.target.value))} className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]" />
-                                </label>
-                            </>}
-                            {type === "classification" && <>
-                                <label className="text-sm text-gray-400">Number of classes
-                                    <input type="number" min="2" max="10" value={classCount} onChange={(event) => setClassCount(Math.max(2, Math.min(10, Number(event.target.value))))} className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]" />
-                                </label>
-                                <label className="text-sm text-gray-400 sm:col-span-2">Class labels (comma separated)
-                                    <input type="text" value={classLabels} onChange={(event) => setClassLabels(event.target.value)} placeholder="class_0, class_1" className="mt-2 w-full rounded-lg border border-[#243724] bg-[#070a07] px-3 py-2 text-[#d4e6d5] outline-none focus:border-[#7aa88a]" />
-                                </label>
-                            </>}
+                                {type === "regression" && <>
+                                    <div className="flex flex-row gap-2 py-4">
+                                        <label className="text-sm text-gray-400">Slope
+                                            <input type="number" step="0.1" value={slope} onChange={(event) => setSlope(Number(event.target.value))} className="mt-2 w-full rounded-lg bg-blue-400/10 px-3 py-2 text-grey-200 outline-none focus:border-blue-300" />
+                                        </label>
+                                        <label className="text-sm text-gray-400">Constant
+                                            <input type="number" step="0.1" value={constant} onChange={(event) => setConstant(Number(event.target.value))} className="mt-2 w-full rounded-lg bg-blue-400/10 px-3 py-2 text-grey-200 outline-none focus:border-blue-300" />
+                                        </label>
+                                    </div>
+                                </>}
+                                {type === "classification" && <>
+                                <div className="flex flex-row gap-2 py-4">
+                                    <label className="text-sm text-gray-400">Number of classes
+                                        <input type="number" min="2" max="10" value={classCount} onChange={(event) => setClassCount(Math.max(2, Math.min(10, Number(event.target.value))))} className="mt-2 w-full rounded-lg bg-blue-400/10 px-3 py-2 text-grey-200 outline-none focus:border-blue-300" />
+                                    </label>
+                                    <label className="text-sm text-gray-400 sm:col-span-2">Class labels (comma separated)
+                                        <input type="text" value={classLabels} onChange={(event) => setClassLabels(event.target.value)} placeholder="class_0, class_1" className="mt-2 w-full rounded-lg bg-blue-400/10 px-3 py-2 text-grey-200 outline-none focus:border-blue-300" />
+                                    </label>
+                                </div>
+                                </>}
+                            </div>
                         </div>
-                        <button type="button" onClick={generateDataset} className="mt-6 w-full rounded-lg bg-[#618c61] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#7aa88a]">Generate dataset</button>
+                        <button type="button" onClick={generateDataset} className="mt-6 w-full rounded-lg bg-green-400/10 border border-green-400 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-400/30">Generate dataset</button>
                     </div>
 
                     <div className="rounded-xl border border-[#243724] bg-[#101a10] p-5">
@@ -122,7 +128,7 @@ export default function CreateData({ onNavigate }) {
                         <div className="mt-3 rounded-lg border border-dashed border-[#243724] p-4 text-sm leading-6 text-gray-500">
                             Generate a dataset to populate its quality checks and column-level details.
                         </div>
-                        <button type="button" onClick={downloadDataset} className="mt-5 w-full rounded-lg border border-[#618c61] bg-[#172617] px-4 py-2 text-sm text-[#d4e6d5] transition hover:bg-[#1f331f] hover:text-white">Download CSV</button>
+                        <button type="button" onClick={downloadDataset} className="mt-5 w-full rounded-lg border border-red-500 bg-red-400/10 px-4 py-2 text-sm text-grey-200 transition hover:bg-red-400/30 hover:text-white">Download CSV</button>
                     </div>
                 </div>
                 <section className="mt-5 rounded-xl border border-[#243724] bg-[#0e140e]/80 p-5">

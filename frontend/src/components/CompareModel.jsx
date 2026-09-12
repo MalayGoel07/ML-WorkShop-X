@@ -120,7 +120,7 @@ export default function CompareModel({ onNavigate }) {
                             <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Compare Models</h1>
                             <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-400">Evaluate candidate models side by side and find the strongest fit for your dataset.</p>
                         </div>
-                        <button onClick={() => onNavigate("/home")} className="rounded-lg border border-[#243724] bg-[#101a10] px-4 py-2 text-sm text-gray-200 transition hover:border-[#7aa88a]/70 hover:text-[#adc9ae]">Back</button>
+                        <button onClick={() => onNavigate("/home")} className="no-underline rounded-lg border border-red-600 bg-red-600/10 px-4 py-2 text-sm text-red-300 transition hover:bg-red-600/30">Back</button>
                     </div>
                 </header>
 
@@ -133,11 +133,11 @@ export default function CompareModel({ onNavigate }) {
 
                         <div className="mb-4 flex gap-2">
                             {["classification", "regression"].map((t) => (
-                                <button key={t} type="button" onClick={() => changeTaskType(t)} className={`flex-1 rounded-lg border px-3 py-2 text-xs capitalize transition ${taskType === t ? "border-[#618c61] bg-[#172617] text-[#d4e6d5]" : "border-[#243724] bg-[#101a10] text-gray-400 hover:border-[#618c61]"}`}>{t}</button>
+                                <button key={t} type="button" onClick={() => changeTaskType(t)} className={`flex-1 rounded-lg border px-3 py-2 text-xs capitalize transition ${taskType === t ? "border-blue-400 bg-blue-400/10 text-white hover:bg-blue-500" : "border-[#243724] bg-[#101a10] text-gray-400 hover:border-green-400 hover:bg-green-400/10"}`}>{t}</button>
                             ))}
                         </div>
 
-                        <div className="max-h-80 space-y-2 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#7aa88a] scrollbar-track-[#101a10] lg:max-h-96">
+                        <div className="max-h-58 space-y-2 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-[#7aa88a] scrollbar-track-[#101a10]">
                             {visibleModels.map(({ name, description }) => {
                                 const selected = selectedModels.includes(name);
                                 return (
@@ -153,7 +153,7 @@ export default function CompareModel({ onNavigate }) {
                             {visibleModels.length === 0 && (<p className="px-1 py-4 text-center text-xs text-gray-500">No models available for this task type.</p>)}
                         </div>
 
-                        <div className="mt-5 border-t border-[#243724] pt-4">
+                        <div className="mt-5 border-t border-green-200 pt-4">
                             <p className="mb-2 text-xs uppercase tracking-[0.2em] text-[#adc9ae]">Target column</p>
                             <input type="text" value={targetColumn} onChange={(e) => setTargetColumn(e.target.value)} placeholder="e.g. price, label, class" disabled={!needsTarget} className="w-full rounded-lg border border-[#243724] bg-[#101a10] px-3 py-2 text-sm text-[#d4e6d5] placeholder:text-gray-600 focus:border-[#618c61] focus:outline-none disabled:opacity-50" />
                         </div>
@@ -161,7 +161,7 @@ export default function CompareModel({ onNavigate }) {
                         <div className="mt-5 border-t border-[#243724] pt-4">
                             <p className="mb-2 text-xs uppercase tracking-[0.2em] text-[#adc9ae]">Dataset</p>
                             <input ref={fileInputRef} type="file" accept=".csv,.json,.xlsx" className="hidden" onChange={handleFileChange} />
-                            <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full rounded-lg border border-[#618c61] bg-[#172617] px-4 py-2 text-sm text-[#d4e6d5] transition hover:bg-[#1f331f] hover:text-white">Upload dataset</button>
+                            <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full rounded-lg border border-red-400 bg-red-400/10 px-4 py-2 text-sm text-[#d4e6d5] transition hover:bg-red-400 hover:border-red-500 hover:text-white">Upload dataset</button>
                             <p className="mt-2 truncate text-xs text-gray-500">{fileName || "No dataset selected"}</p>
                         </div>
                     </section>
@@ -184,7 +184,7 @@ export default function CompareModel({ onNavigate }) {
                             ))}
                         </div>
 
-                        <button type="button" onClick={runComparison} disabled={isRunning || selectedModels.length === 0} className="mt-4 w-full rounded-lg bg-[#618c61] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#7aa88a] disabled:cursor-not-allowed disabled:opacity-50">{isRunning ? "Running..." : "Run comparison"}</button>
+                        <button type="button" onClick={runComparison} disabled={isRunning || selectedModels.length === 0} className="mt-4 w-full rounded-lg border border-green-400/40 hover:bg-green-300/10 hover:border-green-300 px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50">{isRunning ? "Running..." : "Run comparison"}</button>
                     </section>
                 </div>
 

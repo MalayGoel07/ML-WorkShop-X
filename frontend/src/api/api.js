@@ -3,7 +3,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000
 
 const api = {
   async get(path) {
-    const response = await fetch(`${API_BASE_URL}${path}`);
+    const response = await fetch(`${API_BASE_URL}${path}`, { credentials: "include" });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {throw new Error(data.detail || `Request failed (${response.status})`);}
     return { data };
@@ -13,6 +13,7 @@ const api = {
     const isFormData = body instanceof FormData;
     const response = await fetch(`${API_BASE_URL}${path}`, {
       method: "POST",
+      credentials: "include",
       headers: isFormData ? undefined : { "Content-Type": "application/json" },
       body: isFormData ? body : JSON.stringify(body),
     });

@@ -20,17 +20,17 @@ const placementRows = Array.from({ length: 100 }, (_, index) => {
   return { serialNo, cgpa, iq, placementPossibility: `${placementPossibility}%`,};});
 
 export default function CBXLanding({ onNavigate }) {
-  const openLogin = () => {
+  const openWorkspace = () => {
     if (onNavigate) {
-      onNavigate("/logsign");
+      onNavigate("/home");
       return;
     }
 
-    window.location.href = "/logsign";
+    window.location.href = "/home";
   };
 
   return (
-    <div className="h-screen bg-[#292929] text-white font-sans pt-14 overflow-y-auto scrollbar-thin scrollbar-thumb-[#7aa88a]">       
+    <div className="h-screen bg-[#292929] text-white font-sans pt-14 overflow-y-auto scrollbar-thin scrollbar-thumb-[#7aa88a] scroll-smooth">      
       <nav className="fixed top-0 left-0 w-full flex items-center justify-between px-6 py-4 border-b border-[#172617] bg-[#0e140e]/80 backdrop-blur-md z-50">        
         <span className="text-xl font-bold tracking-tight">
           <span className="text-[#adc9ae]">WorkShop</span>
@@ -41,7 +41,7 @@ export default function CBXLanding({ onNavigate }) {
           <a href="#models" className="hover:text-white transition-colors">Models</a>
           <a href="#demo" className="hover:text-white transition-colors">Demo</a>
         </div>
-        <button onClick={openLogin} className="bg-[#7aa88a] hover:bg-[#618c61] text-white text-sm px-4 py-1.5 rounded-lg transition-colors">Get Started</button>
+        <button onClick={openWorkspace} className="bg-[#7aa88a] hover:bg-[#618c61] text-white text-sm px-4 py-1.5 rounded-lg transition-colors">Get Started</button>
       </nav>
 
       <section className="max-w-5xl mx-auto pt-6 pb-6 text-center backdrop-blur-sm z-50">
@@ -54,7 +54,7 @@ export default function CBXLanding({ onNavigate }) {
         </h1>
         <p className="text-gray-400 text-[16px] max-w-xl mx-auto mb-10">WorKshop-X routes your data to the right data management system, then give details and distributes data to all avaible models.</p>
         <div className="flex items-center justify-center gap-4">
-          <button onClick={openLogin} className="bg-[#618c61] hover:bg-[#275728] text-white px-6 py-2.5 rounded-lg font-medium transition-colors">Start Testing</button>
+          <button onClick={openWorkspace} className="bg-[#618c61] hover:bg-[#275728] text-white px-6 py-2.5 rounded-lg font-medium transition-colors">Start Testing</button>
           <a href="#models" className="border border-[#618c61] hover:border-[#91cc92] text-gray-300 hover:text-white px-6 py-2.5 rounded-lg font-medium transition-colors">View Models</a>
         </div>
       </section>
@@ -154,7 +154,7 @@ export default function CBXLanding({ onNavigate }) {
       <section className="border-t border-[#172617] py-8 text-center px-8 backdrop-blur-sm z-50">
         <h2 className="text-3xl font-bold mb-4">Ready to try models?</h2>
         <p className="text-gray-400 mb-8 max-w-md mx-auto text-sm">WorkShop-X brings together all the ML models and perform proper data management.</p>
-        <button onClick={openLogin} className="bg-[#618c61] hover:bg-[#275728] text-white px-8 py-3 rounded-lg font-medium transition-colors">Launch WorkShop-X</button>
+        <button onClick={openWorkspace} className="bg-[#618c61] hover:bg-[#275728] text-white px-8 py-3 rounded-lg font-medium transition-colors">Launch WorkShop-X</button>
       </section>
 
       <footer className="border-t border-[#172617] px-8 py-6 flex items-center justify-between text-xs text-gray-600 backdrop-blur-sm z-50">

@@ -71,7 +71,6 @@ cd backend
 pip install -r requirement.txt
 ```
 3. Configure environment variables as needed. The backend reads:
-- ACCESS_TOKEN_EXPIRE_MINUTES (optional, default 30)
 - Database/connection settings are read in `backend/db.py` — ensure a running DB if you want auth to persist.
 
 4. Run the API:
@@ -116,22 +115,6 @@ curl -X POST "http://localhost:8000/train" \
   -F 'task_type=classification' \
   -F 'models=[\"Logistic Regression\",\"Random Forest\"]'
 ```
-
-- Authentication
-  - POST /auth/signup
-    - JSON body (fields used by the signup flow): username, password, full_name, email
-    - Returns an access token.
-  - POST /auth/login
-    - Accepts form-encoded fields: username, password (OAuth2 password form).
-    - Returns an access token (bearer).
-  - Protected profile endpoints:
-    - GET /me
-    - PUT /me (ProfileUpdate with fields: full_name, nickname, instructions)
-
-Notes:
-- The backend stores users in a `users_collection` (see backend/db.py). Ensure DB connectivity for signup/login to persist.
-- Use the bearer token in Authorization headers for protected endpoints:
-  - Authorization: Bearer <access_token>
 
 ## Dataset / training notes
 - Categorical features are one-hot encoded.

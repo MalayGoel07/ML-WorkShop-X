@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import HomePage from "./components/HomePage";
 import CBXLanding from "./components/LandingPage";
-import LogSignPage from "./components/LogSignPage";
 import DataAnalyzer from "./components/DataAnalyzer";
 import CompareModel from "./components/CompareModel";
 import Roadmap from "./components/Roadmap";
@@ -18,7 +17,6 @@ export default function App() {
 
   const navigate = (nextPath) => {window.history.pushState({}, "", nextPath);setPath(nextPath);};
 
-  if (path === "/logsign") {return <LogSignPage onNavigate={navigate} />;}
   if (path === "/home") {return <HomePage onNavigate={navigate} />;}
   if (path === "/analyze") {return <DataAnalyzer onNavigate={navigate} />;}
   if (path === "/compare") {return <CompareModel onNavigate={navigate} />;}

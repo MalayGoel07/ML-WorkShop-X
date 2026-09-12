@@ -31,7 +31,7 @@ export default function FloatingWords() {
   useEffect(() => {
   const interval = setInterval(() => {
     const amount = 5;
-    const newWords = Array.from({ length: amount }, () => ({id: `${Date.now()}-${Math.random()}`,text: words[Math.floor(Math.random() * words.length)],left: Math.random() * 90 + 5,duration: Math.random() * 2 + 4,}));
+    const newWords = Array.from({ length: amount }, () => ({id: `${Date.now()}-${Math.random()}`,text: words[Math.floor(Math.random() * words.length)],left: Math.random() * 80 + 5,duration: Math.random() * 2 + 4,}));
     setFloatingWords((current) => [...current,...newWords,]);
     newWords.forEach((word) => {setTimeout(() => {setFloatingWords((current) =>current.filter((item) => item.id !== word.id));}, word.duration * 1000);});
   }, 600);

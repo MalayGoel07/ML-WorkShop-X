@@ -35,7 +35,7 @@ export default function DataAnalyzer({ onNavigate }) {
 
     return (
         <div className="h-screen overflow-x-hidden bg-[#292929] px-4 py-4 font-mono text-white md:px-8 overflow-y-auto scrollbar-thin scrollbar-thumb-[#7aa88a]">
-            <section className="mx-auto max-w-7xl">
+            <section className="mx-auto max-w-5xl">
                 <header className="mb-4 border-b border-[#243724] pb-5">
                     <p className="mb-2 text-xs uppercase tracking-[0.3em] text-[#adc9ae]">WorkShop-X</p>
                     <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
@@ -43,18 +43,18 @@ export default function DataAnalyzer({ onNavigate }) {
                             <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Data Analyzer</h1>
                             <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-400">Inspect your dataset, find its shape, and surface patterns worth exploring.</p>
                         </div>
-                        <button onClick={() => onNavigate("/home")} className="rounded-lg border border-[#243724] bg-[#101a10] px-4 py-2 text-sm text-gray-200 transition hover:border-[#7aa88a]/70 hover:text-[#adc9ae]">Back</button>
+                        <button onClick={() => onNavigate("/home")} className="no-underline rounded-lg border border-red-600 bg-red-600/10 px-4 py-2 text-sm text-red-300 transition hover:bg-red-600/30">Back</button>
                     </div>
                 </header>
 
-                <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+                <div className="flex flex-col gap-4">
                     <div className="rounded-xl border border-[#243724] bg-[#0e140e]/80 p-5 shadow-2xl shadow-[#172617]/20">
                         <div className="mb-4 flex items-center justify-between">
                             <div>
                                 <p className="text-xs uppercase tracking-[0.2em] text-[#adc9ae]">01 / Input</p>
                                 <h2 className="mt-1 text-lg font-bold">Bring in your data</h2>
                             </div>
-                            <span className="rounded border border-[#243724] bg-[#172617] px-2 py-1 text-[10px] text-gray-400">CSV / JSON</span>
+                            <span className="rounded border border-pruple-600 bg-purple-500/10 px-2 py-1 text-[10px] text-gray-400">CSV / JSON</span>
                         </div>
 
                         <textarea
@@ -74,35 +74,133 @@ export default function DataAnalyzer({ onNavigate }) {
                                 Upload file
                             </button>
                             <span className="truncate text-xs text-gray-500">{fileName || "No file selected"}</span>
-                            <button type="button" onClick={runAnalyzer} disabled={isAnalyzing} className="rounded-lg bg-[#618c61] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#7aa88a] disabled:cursor-not-allowed disabled:opacity-50">
+                            <button type="button" onClick={runAnalyzer} disabled={isAnalyzing} className="rounded-lg bg-red-400/10 px-4 py-2 border border-red-500 text-sm font-semibold text-white transition hover:bg-red-400/30 disabled:cursor-not-allowed disabled:opacity-50">
                                 {isAnalyzing ? "Analyzing..." : "Analyze dataset"}
                             </button>
                         </div>
                         {error && <p role="alert" className="mt-3 text-sm text-red-400">{error}</p>}
                     </div>
 
-                    <div className="rounded-xl border border-[#243724] bg-[#101a10] p-5">
-                        <div className="mb-5">
+                    <div className="flex flex-col gap-5 rounded-xl border border-[#243724] bg-[#101a10] p-5 shadow-2xl shadow-[#172617]/10">
+                        <div className="flex flex-col gap-1 border-b border-[#243724] pb-4 sm:flex-row sm:items-end sm:justify-between">
                             <p className="text-xs uppercase tracking-[0.2em] text-[#adc9ae]">02 / Snapshot</p>
                             <h2 className="mt-1 text-lg font-bold">Dataset overview</h2>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                             {[
-                                ["Rows", analysis?.rows ?? "--"],
-                                ["Columns", analysis?.columns ?? "--"],
-                                ["Missing", analysis?.missing ?? "--"],
-                                ["Data types", analysis ? new Set(analysis.types.map(({ type }) => type)).size : "--"],
+                                ["No. of Rows", analysis?.rows ?? "--"],
+                                ["No. of Columns", analysis?.columns ?? "--"],
+                                ["Missing values", analysis?.missing ?? "--"],
+                                ["No. of Duplicate rows", analysis?.dup_rows ?? "--"],
                             ].map(([label, value]) => (
-                                <div key={label} className="rounded-lg border border-[#243724] bg-[#0e140e] p-4">
-                                    <p className="text-xs text-gray-500">{label}</p>
-                                    <p className="mt-2 text-2xl font-bold text-[#adc9ae]">{value}</p>
+                                <div key={label} className="rounded-lg border border-[#243724] bg-[#0e140e] p-4 transition-colors hover:border-[#618c61] hover:bg-[#101a10]">
+                                    <p className="text-[11px] uppercase tracking-wide text-gray-500">{label}</p>
+                                    <p className="mt-2 text-2xl font-bold tabular-nums text-[#adc9ae]">{value}</p>
                                 </div>
                             ))}
                         </div>
-                        <div className="mt-3 rounded-lg border border-dashed border-[#243724] p-4 text-sm leading-6 text-gray-500">
-                            {analysis ? `${analysis.missing} missing values found across ${analysis.columns} columns.` : "Analyze a dataset to populate its quality checks and column-level details."}
+                        {analysis && 
+                        <div className="rounded-lg border border-[#243724] bg-[#0e140e] p-4">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-xs uppercase tracking-[0.18em] text-[#adc9ae]">Schema</p>
+                                    <h3 className="mt-1 font-semibold text-white">Columns and data types</h3>
+                                </div>
+                                <span className="rounded-full border border-[#243724] px-2.5 py-1 text-[10px] text-gray-500">{analysis.types.length} fields</span>
+                            </div>
+                            <div className="mt-4 grid gap-2 sm:grid-cols-2">{analysis.types.map(({ name, type }) => <div key={name} className="flex min-w-0 items-center justify-between gap-3 rounded-md border border-[#243724] bg-[#101a10] px-3 py-2 text-sm"><span className="truncate text-[#d4e6d5]">{name}</span><span className="shrink-0 rounded bg-[#172617] px-2 py-1 text-xs text-[#adc9ae]">{type}</span></div>)}</div>
                         </div>
-                        {analysis && <div className="mt-3 space-y-2 text-sm">{analysis.types.map(({ name, type }) => <div key={name} className="flex justify-between border-b border-[#243724] pb-2"><span className="truncate text-[#d4e6d5]">{name}</span><span className="text-[#adc9ae]">{type}</span></div>)}</div>}
+                        }
+                        {analysis?.stats && (
+                            <div className="rounded-lg border border-[#243724] bg-[#0e140e] p-4">
+                                <div className="mb-5 border-b border-[#243724] pb-4">
+                                    <p className="text-xs uppercase tracking-[0.2em] text-[#adc9ae]">Statistics</p>             
+                                    <h2 className="mt-1 text-lg font-bold"> Numerical statistics </h2>
+                                </div>                 
+                                <div className="grid gap-3 xl:grid-cols-2">
+                                    {Object.entries(analysis.stats).map(([column, stat]) => (
+                                        <div key={column} className="rounded-lg border border-[#243724] bg-[#101a10] p-4">
+                                        <h3 className="mb-4 truncate border-l-2 border-[#7aa88a] pl-3 font-semibold text-[#d4e6d5]">{column}</h3>
+                                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                                    <div>
+                                      <p className="text-xs text-gray-500">Count</p>
+                                      <p className="mt-1 font-semibold">{stat.count}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Mean</p>
+                                      <p className="mt-1 font-semibold">{stat.mean}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Median</p>
+                                      <p className="mt-1 font-semibold">{stat.median}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Std</p>
+                                      <p className="mt-1 font-semibold">{stat.std}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Min</p>
+                                      <p className="mt-1 font-semibold">{stat.min}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Q1</p>
+                                      <p className="mt-1 font-semibold">{stat.q1}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Q3</p>
+                                      <p className="mt-1 font-semibold">{stat.q3}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Max</p>
+                                      <p className="mt-1 font-semibold">{stat.max}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Skewness</p>
+                                      <p className="mt-1 font-semibold">{stat.skewness}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">IQR</p>
+                                      <p className="mt-1 font-semibold">{stat.iqr}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {analysis?.outliers && (
+                            <div className="rounded-lg border border-[#243724] bg-[#0e140e] p-4">
+                                <div className="mb-5 border-b border-[#243724] pb-4">
+                                    <p className="text-xs uppercase tracking-[0.2em] text-[#adc9ae]">Outliers</p>             
+                                    <h2 className="mt-1 text-lg font-bold"> Outlier Analysis </h2>
+                                </div>               
+                                <div className="grid gap-3 xl:grid-cols-2">
+                                    {Object.entries(analysis.outliers).map(([column, outliers]) => (
+                                        <div key={column} className="rounded-lg border border-[#243724] bg-[#101a10] p-4">
+                                        <h3 className="mb-4 truncate border-l-2 border-[#7aa88a] pl-3 font-semibold text-[#d4e6d5]">{column}</h3>
+                                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                    <div>
+                                      <p className="text-xs text-gray-500">Count</p>
+                                      <p className="mt-1 font-semibold">{outliers.count}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Percentage</p>
+                                      <p className="mt-1 font-semibold">{outliers.percentage}%</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Lower Bound</p>
+                                      <p className="mt-1 font-semibold">{outliers.lower_bound}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-500">Upper Bound</p>
+                                      <p className="mt-1 font-semibold">{outliers.upper_bound}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                     </div>
                 </div>
 
