@@ -2,23 +2,24 @@ import io
 import json
 import sys
 from pathlib import Path
-
 import pandas as pd
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import (MinMaxScaler,OneHotEncoder,RobustScaler,StandardScaler,)
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from backend.ml.analyzer import analyze_dataset, create_relationship_charts
-    from backend.ml.model_registry import MODEL_REGISTRY, compute_metrics, get_model
+    from backend.ml.analyzer import (analyze_dataset,create_relationship_charts,)
+    from backend.ml.model_registry import (MODEL_REGISTRY,compute_metrics,get_model,)
 else:
-    from backend.ml.analyzer import analyze_dataset, create_relationship_charts
-    from backend.ml.model_registry import MODEL_REGISTRY, compute_metrics, get_model
-
+    from backend.ml.analyzer import (analyze_dataset,create_relationship_charts,)
+    from backend.ml.model_registry import (MODEL_REGISTRY,compute_metrics,get_model,)
 
 ml_router = APIRouter()
-
+SCALER_FACTORIES = {"standard": StandardScaler,"minmax": MinMaxScaler,"robust": RobustScaler,}
 
 @ml_router.get("/models")
 async def list_models():
@@ -27,25 +28,29 @@ async def list_models():
         "Logistic Regression": "Fast baseline for classification",
         "Decision Tree": "Interpretable rule-based model",
         "Random Forest": "Robust ensemble of decision trees",
-        "Support Vector Machine": "Strong boundary-based classifier",
-        "K-Nearest Neighbors": "Classifies by nearby observations",
-        "AdaBoost": "Boosts weak learners by reweighting errors",
+        "Support Vector Machine": "Strong boundary-based model",
+        "K-Nearest Neighbors": "Uses nearby observations for prediction",
+        "AdaBoost": "Boosts weak learners by focusing on errors",
         "Gradient Boosting": "Sequentially improves weak learners",
     }
+
     return {
         "models": [
             {
                 "name": name,
                 "task": entry["task"],
                 "needs_scaling": entry["needs_scaling"],
-                "description": descriptions.get(name, "Available model"),
+                "description": descriptions.get(
+                    name,
+                    "Available model",
+                ),
             }
             for name, entry in MODEL_REGISTRY.items()
         ]
     }
 
 
-def load_dataset(file: UploadFile, contents: bytes) -> pd.DataFrame:
+def load_dataset(file: UploadFile,contents: bytes,) -> pd.DataFrame:
     filename = (file.filename or "").lower()
     try:
         if filename.endswith(".json"):
@@ -53,70 +58,116 @@ def load_dataset(file: UploadFile, contents: bytes) -> pd.DataFrame:
         if filename.endswith(".xlsx"):
             return pd.read_excel(io.BytesIO(contents))
         return pd.read_csv(io.BytesIO(contents))
-    except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise HTTPException(status_code=400, detail=f"Could not read dataset: {exc}") from exc
+
+    except (ValueError,UnicodeDecodeError,json.JSONDecodeError,
+    ) as exc:
+        raise HTTPException(status_code=400,detail=f"Could not read dataset: {exc}",) from exc
 
 
 @ml_router.post("/analyze")
 async def analyze_file(file: UploadFile = File(...)):
     contents = await file.read()
-    dataset = load_dataset(file, contents)
+    dataset = load_dataset(file,contents,)
     try:
-        return {
-            "analysis": analyze_dataset(dataset),
-            "charts": create_relationship_charts(dataset),
-        }
+        return {"analysis": analyze_dataset(dataset),"charts": create_relationship_charts(dataset),}
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise HTTPException(status_code=400,detail=str(exc),) from exc
+
+
+def build_preprocessor(X: pd.DataFrame,needs_scaling: bool,scaling_technique: str,):
+
+    numeric_columns = X.select_dtypes(include=["number"]).columns.tolist()
+    categorical_columns = X.select_dtypes(exclude=["number"]).columns.tolist()
+    numeric_steps = [("imputer",SimpleImputer(strategy="median"),)]
+
+    if needs_scaling and scaling_technique != "none":
+        scaler = SCALER_FACTORIES[scaling_technique]()
+        numeric_steps.append(("scaler",scaler,))
+
+    numeric_pipeline = Pipeline(steps=numeric_steps)
+    categorical_pipeline = Pipeline(
+        steps=[("imputer",SimpleImputer(strategy="most_frequent"),),
+               ("encoder",OneHotEncoder(handle_unknown="ignore",sparse_output=False,),),
+    ])
+    preprocessor = ColumnTransformer(
+        transformers=[("numerical",numeric_pipeline,numeric_columns,),("categorical",categorical_pipeline,categorical_columns,),],
+        remainder="drop",
+    )
+
+    return preprocessor
 
 
 @ml_router.post("/train")
-async def train_models( file: UploadFile = File(...), target_column: str = Form(""), task_type: str = Form(...), models: str = Form(...),):
+async def train_models(file: UploadFile = File(...),target_column: str = Form(""),task_type: str = Form(...),models: str = Form(...),scaling_technique: str = Form("standard"),):
+
+    if scaling_technique not in {"none",*SCALER_FACTORIES,}:
+        raise HTTPException(status_code=400,detail=("scaling_technique must be one of: ""standard, minmax, robust, none"),)
+    if task_type not in { "classification","regression",}:
+        raise HTTPException(status_code=400, detail=("task_type must be either ""'classification' or 'regression'"),)
     try:
         model_names = json.loads(models)
     except json.JSONDecodeError as exc:
-        raise HTTPException(status_code=400, detail="models must be a JSON array") from exc
+        raise HTTPException(status_code=400,detail="models must be a JSON array",) from exc
+
+    if not isinstance(model_names, list):
+        raise HTTPException(status_code=400,detail="models must be a JSON array",)
 
     contents = await file.read()
-    dataset = load_dataset(file, contents)
+    dataset = load_dataset(file,contents,)
 
     if dataset.empty:
-        raise HTTPException(status_code=400, detail="Dataset is empty")
+        raise HTTPException(status_code=400,detail="Dataset is empty",)
+    if not target_column:
+        raise HTTPException(status_code=400,detail="Target column is required",)
     if target_column not in dataset.columns:
-        raise HTTPException(status_code=400, detail=f"Target column '{target_column}' was not found")
+        raise HTTPException(status_code=400,detail=(f"Target column '{target_column}' ""was not found"),)
 
-    features = dataset.drop(columns=[target_column], errors="ignore")
-    features = pd.get_dummies(features).apply(pd.to_numeric, errors="coerce")
-    features = features.fillna(features.median(numeric_only=True)).fillna(0)
-    X = features.to_numpy()
-    y = dataset[target_column]
+    X = dataset.drop(columns=[target_column])
+    y = dataset[target_column].copy()
 
     if task_type == "classification":
-        y = pd.factorize(y)[0]
+        valid_target = y.notna()
+        X = X.loc[valid_target]
+        y = y.loc[valid_target]
+        if y.nunique() < 2:
+            raise HTTPException(status_code=400,detail=("Classification requires ""at least 2 target classes."),)
     else:
-        y = pd.to_numeric(y, errors="coerce").to_numpy()
-        valid = ~pd.isna(y)
-        X, y = X[valid], y[valid]
+        y = pd.to_numeric(y,errors="coerce",)
+        valid_target = y.notna()
+        X = X.loc[valid_target]
+        y = y.loc[valid_target]
+        if len(y) < 2:
+            raise HTTPException(status_code=400,detail=("Regression requires at least ""2 valid numeric target values."),)
 
+    if task_type == "classification":
+        X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2,random_state=42,stratify=y,)
+    else:
+        X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2,random_state=42,)
     results = {}
     for name in model_names:
         try:
             if name not in MODEL_REGISTRY:
                 raise ValueError(f"Unknown model: {name}")
 
-            model = get_model(name, task_type)
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+            registry_entry = MODEL_REGISTRY[name]
+            if (registry_entry["task"] != "both"and registry_entry["task"] != task_type):
+                raise ValueError(f"{name} is not compatible with "f"{task_type}")
 
-            if MODEL_REGISTRY[name]["needs_scaling"] :
-                scaler=StandardScaler()
-                X_train=scaler.fit_transform(X_train)
-                X_test=scaler.transform(X_test)
+            model = get_model(name,task_type,)
+            preprocessor = build_preprocessor(X_train,needs_scaling=registry_entry["needs_scaling"],scaling_technique=scaling_technique,)
+            pipeline = Pipeline(steps=[("preprocessor",preprocessor,),("model",model,),])
 
-            model.fit(X_train, y_train)
-            metrics = compute_metrics(task_type, y_test, model.predict(X_test))
-            results[name] = {"metrics": metrics, "test_samples": len(y_test)}
-            
+            pipeline.fit(X_train,y_train,)
+            predictions = pipeline.predict(X_test)
+            metrics = compute_metrics(task_type,y_test,predictions,)
+            results[name] = {"metrics": metrics,"test_samples": len(y_test),}
+
         except Exception as exc:
             results[name] = {"error": str(exc)}
-
-    return {"results": results}
+    return {
+        "results": results,
+        "train_samples": len(y_train),
+        "test_samples": len(y_test),
+        "features": X.shape[1],
+        "task_type": task_type,
+    }

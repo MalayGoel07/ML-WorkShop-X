@@ -9,6 +9,12 @@ const PRIMARY_METRIC = {
     classification: { key: "Accuracy", better: "higher" },
     regression: { key: "R² score", better: "higher" },
 };
+const SCALING_OPTIONS = [
+    { value: "standard", label: "StandardScaler", description: "Centered around mean with unit variance" },
+    { value: "minmax", label: "MinMaxScaler", description: "Maps values into a 0 to 1 range" },
+    { value: "robust", label: "RobustScaler", description: "Less sensitive to outliers" },
+    { value: "none", label: "No scaling", description: "Use the original feature ranges" },
+];
 
 export default function CompareModel({ onNavigate }) {
     const fileInputRef = useRef(null);
@@ -17,6 +23,7 @@ export default function CompareModel({ onNavigate }) {
 
     const [targetColumn, setTargetColumn] = useState("");
     const [taskType, setTaskType] = useState("classification");
+    const [scalingTechnique, setScalingTechnique] = useState("standard");
     const [modelOptions, setModelOptions] = useState([]);
     const [selectedModels, setSelectedModels] = useState([]);
 
@@ -67,6 +74,7 @@ export default function CompareModel({ onNavigate }) {
             formData.append("target_column", targetColumn);
             formData.append("task_type", taskType);
             formData.append("models", JSON.stringify(selectedModels));
+            formData.append("scaling_technique", scalingTechnique);
 
             const { data } = await api.post("/train", formData);
             const nextResults = {};
@@ -156,6 +164,14 @@ export default function CompareModel({ onNavigate }) {
                         <div className="mt-5 border-t border-green-200 pt-4">
                             <p className="mb-2 text-xs uppercase tracking-[0.2em] text-[#adc9ae]">Target column</p>
                             <input type="text" value={targetColumn} onChange={(e) => setTargetColumn(e.target.value)} placeholder="e.g. price, label, class" disabled={!needsTarget} className="w-full rounded-lg border border-[#243724] bg-[#101a10] px-3 py-2 text-sm text-[#d4e6d5] placeholder:text-gray-600 focus:border-[#618c61] focus:outline-none disabled:opacity-50" />
+                        </div>
+
+                        <div className="mt-5 border-t border-[#243724] pt-4">
+                            <label htmlFor="scaling-technique" className="mb-2 block text-xs uppercase tracking-[0.2em] text-[#adc9ae]">Feature scaling</label>
+                            <select id="scaling-technique" value={scalingTechnique} onChange={(event) => setScalingTechnique(event.target.value)} className="w-full rounded-lg border border-purple-400 bg-purple-400/10 px-3 py-2 text-sm text-grey-200 focus:bg-purple-400/30 focus:outline-none">
+                                {SCALING_OPTIONS.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+                            </select>
+                            <p className="mt-2 text-xs text-gray-500">{SCALING_OPTIONS.find(({ value }) => value === scalingTechnique)?.description}</p>
                         </div>
 
                         <div className="mt-5 border-t border-[#243724] pt-4">
